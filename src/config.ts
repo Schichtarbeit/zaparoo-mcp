@@ -11,6 +11,7 @@ export interface DeviceConfig {
 
 export interface Config {
   devices: DeviceConfig[];
+  discovery: boolean;
 }
 
 function parseDeviceList(raw: string, keys: string): DeviceConfig[] {
@@ -50,20 +51,27 @@ export function loadConfig(): Config {
     options: {
       devices: { type: 'string' },
       keys: { type: 'string' },
+      'no-discovery': { type: 'boolean' },
     },
     strict: false,
   });
 
   const devicesRaw = (values.devices as string | undefined) ?? process.env.ZAPAROO_DEVICES ?? '';
   const keysRaw = (values.keys as string | undefined) ?? process.env.ZAPAROO_KEYS ?? '';
+  const noDiscovery =
+    (values['no-discovery'] as boolean | undefined) ?? process.env.ZAPAROO_NO_DISCOVERY === '1';
 
   if (!devicesRaw) {
-    throw new Error(
-      'No devices configured. Use --devices <host:port,...> or set ZAPAROO_DEVICES env var.',
-    );
+    if (noDiscovery) {
+      throw new Error(
+        'No devices configured. Use --devices <host:port,...> or set ZAPAROO_DEVICES env var.',
+      );
+    }
+    return { devices: [], discovery: true };
   }
 
   return {
     devices: parseDeviceList(devicesRaw, keysRaw),
+    discovery: false,
   };
 }

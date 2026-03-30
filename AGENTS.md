@@ -18,7 +18,10 @@ npm run test:watch   # Tests in watch mode
 
 ### Connection layer (`src/connection/`)
 - `DeviceConnection` — WebSocket client for a single Zaparoo device. Handles JSON-RPC request/response correlation, automatic reconnection with exponential backoff, and heartbeat pings.
-- `DeviceManager` — orchestrates multiple connections. `getDevice(id?)` returns a specific device or the first READY one.
+- `DeviceManager` — orchestrates multiple connections. `getDevice(id?)` returns a specific device or the first READY one. Supports dynamic `addDevice()`/`removeDevice()` for mDNS discovery.
+
+### Discovery (`src/discovery/`)
+- `MdnsDiscovery` — browses for `_zaparoo._tcp` services via mDNS using `bonjour-service`. Emits `discovered`/`removed` events. Runs automatically when no devices are manually configured.
 
 ### Tools (`src/tools/`)
 Each file registers one MCP tool via `registerXxxTool(server, manager)`. All tools are wired up in `src/tools/index.ts` through `registerAllTools()`.
@@ -32,7 +35,7 @@ Each file registers one MCP tool via `registerXxxTool(server, manager)`. All too
 `NotificationHandler` listens for device events, updates `DeviceStateStore` (in-memory cache), and pushes MCP resource change notifications.
 
 ### Config (`src/config.ts`)
-CLI args take precedence over env vars. Required: `--devices` or `ZAPAROO_DEVICES`. Optional: `--keys`/`ZAPAROO_KEYS`. Default port is 7497.
+CLI args take precedence over env vars. Optional: `--devices`/`ZAPAROO_DEVICES`, `--keys`/`ZAPAROO_KEYS`. Default port is 7497. When no devices are configured, mDNS discovery is enabled automatically. Use `--no-discovery` or `ZAPAROO_NO_DISCOVERY=1` to disable.
 
 ## Adding a new tool
 
@@ -50,6 +53,7 @@ Tests use Vitest and live alongside source files as `*.test.ts`. Test files are 
 - Mock `ws` module with a `MockWebSocket` class extending `EventEmitter` for `DeviceConnection` tests. Use `vi.useFakeTimers()` for timeout/backoff tests.
 - Mock `DeviceConnection` import via `vi.mock()` for `DeviceManager` tests, tracking created instances in an array.
 - Mock `node:util` `parseArgs` for config tests to control CLI arg values.
+- Mock `bonjour-service` with a mock class returning `EventEmitter`-based browsers for `MdnsDiscovery` tests.
 - Use `as unknown as <Type>` double-cast for partial mocks of complex interfaces (DeviceManager, MCP Server).
 - Reset module-level mock state (e.g., `lastMockWs`, `createdDevices`) in `beforeEach`.
 

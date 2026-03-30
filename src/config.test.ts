@@ -13,16 +13,44 @@ describe('loadConfig', () => {
   beforeEach(() => {
     delete process.env.ZAPAROO_DEVICES;
     delete process.env.ZAPAROO_KEYS;
+    delete process.env.ZAPAROO_NO_DISCOVERY;
     mockParseArgs.mockReturnValue({ values: {}, positionals: [], tokens: undefined });
   });
 
   afterEach(() => {
     delete process.env.ZAPAROO_DEVICES;
     delete process.env.ZAPAROO_KEYS;
+    delete process.env.ZAPAROO_NO_DISCOVERY;
   });
 
-  it('throws when no devices configured', () => {
+  it('enables discovery when no devices configured', () => {
+    const config = loadConfig();
+
+    expect(config.devices).toHaveLength(0);
+    expect(config.discovery).toBe(true);
+  });
+
+  it('throws when no devices configured and --no-discovery', () => {
+    mockParseArgs.mockReturnValue({
+      values: { 'no-discovery': true },
+      positionals: [],
+      tokens: undefined,
+    });
+
     expect(() => loadConfig()).toThrow('No devices configured');
+  });
+
+  it('throws when no devices configured and ZAPAROO_NO_DISCOVERY=1', () => {
+    process.env.ZAPAROO_NO_DISCOVERY = '1';
+
+    expect(() => loadConfig()).toThrow('No devices configured');
+  });
+
+  it('sets discovery to false when devices are specified', () => {
+    process.env.ZAPAROO_DEVICES = 'host:7497';
+    const config = loadConfig();
+
+    expect(config.discovery).toBe(false);
   });
 
   it('parses a single device with host and port', () => {

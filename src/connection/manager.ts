@@ -68,6 +68,33 @@ export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
     return [...this.devices.values()].map((d) => d.info);
   }
 
+  addDevice(config: DeviceConfig): void {
+    if (this.devices.has(config.id)) return;
+
+    const device = new DeviceConnection(config);
+    device.on('stateChange', (state, info) => {
+      this.emit('stateChange', state, info);
+    });
+    device.on('notification', (method, params, deviceId) => {
+      this.emit('notification', method, params, deviceId);
+    });
+    this.devices.set(config.id, device);
+    device.connect();
+  }
+
+  removeDevice(id: string): void {
+    const device = this.devices.get(id);
+    if (!device) return;
+
+    device.removeAllListeners();
+    device.destroy();
+    this.devices.delete(id);
+  }
+
+  hasDevice(id: string): boolean {
+    return this.devices.has(id);
+  }
+
   reconnect(id: string): void {
     const device = this.devices.get(id);
     if (!device) {

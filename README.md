@@ -16,18 +16,25 @@ npm run build
 
 ## Configuration
 
-Devices can be configured via CLI arguments or environment variables. CLI arguments take precedence.
+By default, the server automatically discovers Zaparoo Core devices on the local network using mDNS. No configuration is needed if your devices are on the same network.
 
-| Setting            | CLI Argument                          | Environment Variable |
-|--------------------|---------------------------------------|----------------------|
-| Devices (required) | `--devices host:port[,host:port,...]` | `ZAPAROO_DEVICES`    |
-| API keys           | `--keys key1[,key2,...]`              | `ZAPAROO_KEYS`       |
+To manually specify devices, use CLI arguments or environment variables. CLI arguments take precedence.
 
-The default port is 7497 if not specified.
+| Setting      | CLI Argument                          | Environment Variable   |
+|--------------|---------------------------------------|------------------------|
+| Devices      | `--devices host:port[,host:port,...]` | `ZAPAROO_DEVICES`      |
+| API keys     | `--keys key1[,key2,...]`              | `ZAPAROO_KEYS`         |
+| No discovery | `--no-discovery`                      | `ZAPAROO_NO_DISCOVERY=1` |
+
+The default port is 7497 if not specified. When devices are specified manually, mDNS discovery is disabled.
 
 ## Usage
 
 ```bash
+# Auto-discover devices on the network
+node build/index.js
+
+# Or specify devices manually
 node build/index.js --devices 192.168.1.100:7497
 ```
 

@@ -208,4 +208,90 @@ describe('DeviceManager', () => {
       expect(notifications[0].deviceId).toBe('host2:7497');
     });
   });
+
+  describe('addDevice', () => {
+    it('creates connection and calls connect', () => {
+      const manager = new DeviceManager([]);
+      manager.addDevice({ id: 'new:7497', host: 'new', port: 7497 });
+
+      expect(createdDevices).toHaveLength(1);
+      expect(createdDevices[0].connect).toHaveBeenCalled();
+    });
+
+    it('device appears in getAllDeviceInfo', () => {
+      const manager = new DeviceManager([]);
+      manager.addDevice({ id: 'new:7497', host: 'new', port: 7497 });
+
+      expect(manager.getAllDeviceInfo()).toHaveLength(1);
+      expect(manager.getAllDeviceInfo()[0].id).toBe('new:7497');
+    });
+
+    it('is a no-op for existing device ID', () => {
+      const manager = new DeviceManager(configs);
+      const countBefore = createdDevices.length;
+
+      manager.addDevice({ id: 'host1:7497', host: 'host1', port: 7497 });
+
+      expect(createdDevices).toHaveLength(countBefore);
+    });
+
+    it('forwards stateChange events from dynamically added device', () => {
+      const manager = new DeviceManager([]);
+      const events: Array<{ state: ConnectionState }> = [];
+      manager.on('stateChange', (state) => events.push({ state }));
+
+      manager.addDevice({ id: 'new:7497', host: 'new', port: 7497 });
+      createdDevices[0].emit('stateChange', ConnectionState.Ready, createdDevices[0].info);
+
+      expect(events).toHaveLength(1);
+      expect(events[0].state).toBe(ConnectionState.Ready);
+    });
+
+    it('forwards notification events from dynamically added device', () => {
+      const manager = new DeviceManager([]);
+      const notifications: Array<{ method: string; deviceId: string }> = [];
+      manager.on('notification', (method, _params, deviceId) => {
+        notifications.push({ method, deviceId });
+      });
+
+      manager.addDevice({ id: 'new:7497', host: 'new', port: 7497 });
+      createdDevices[0].emit('notification', 'tokens.added', { uid: 'abc' }, 'new:7497');
+
+      expect(notifications).toHaveLength(1);
+      expect(notifications[0].method).toBe('tokens.added');
+      expect(notifications[0].deviceId).toBe('new:7497');
+    });
+  });
+
+  describe('removeDevice', () => {
+    it('destroys and removes the device', () => {
+      const manager = new DeviceManager(configs);
+      manager.removeDevice('host1:7497');
+
+      expect(createdDevices[0].destroy).toHaveBeenCalled();
+      expect(manager.getAllDeviceInfo()).toHaveLength(1);
+      expect(manager.getAllDeviceInfo()[0].id).toBe('host2:7497');
+    });
+
+    it('is a no-op for unknown device', () => {
+      const manager = new DeviceManager(configs);
+
+      expect(() => manager.removeDevice('unknown:9999')).not.toThrow();
+      expect(manager.getAllDeviceInfo()).toHaveLength(2);
+    });
+  });
+
+  describe('hasDevice', () => {
+    it('returns true for known device', () => {
+      const manager = new DeviceManager(configs);
+
+      expect(manager.hasDevice('host1:7497')).toBe(true);
+    });
+
+    it('returns false for unknown device', () => {
+      const manager = new DeviceManager(configs);
+
+      expect(manager.hasDevice('unknown:9999')).toBe(false);
+    });
+  });
 });
