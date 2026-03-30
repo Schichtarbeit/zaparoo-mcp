@@ -11,7 +11,6 @@ export interface DeviceConfig {
 
 export interface Config {
   devices: DeviceConfig[];
-  logLevel: 'debug' | 'info' | 'warn' | 'error';
 }
 
 function parseDeviceList(raw: string, keys: string): DeviceConfig[] {
@@ -51,16 +50,12 @@ export function loadConfig(): Config {
     options: {
       devices: { type: 'string' },
       keys: { type: 'string' },
-      'log-level': { type: 'string' },
     },
     strict: false,
   });
 
   const devicesRaw = (values.devices as string | undefined) ?? process.env.ZAPAROO_DEVICES ?? '';
   const keysRaw = (values.keys as string | undefined) ?? process.env.ZAPAROO_KEYS ?? '';
-  const logLevel = ((values['log-level'] as string | undefined) ??
-    process.env.ZAPAROO_LOG_LEVEL ??
-    'info') as Config['logLevel'];
 
   if (!devicesRaw) {
     throw new Error(
@@ -70,6 +65,5 @@ export function loadConfig(): Config {
 
   return {
     devices: parseDeviceList(devicesRaw, keysRaw),
-    logLevel,
   };
 }

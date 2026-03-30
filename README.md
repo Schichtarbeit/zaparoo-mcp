@@ -18,11 +18,10 @@ npm run build
 
 Devices can be configured via CLI arguments or environment variables. CLI arguments take precedence.
 
-| Setting            | CLI Argument                           | Environment Variable |
-|--------------------|----------------------------------------|----------------------|
-| Devices (required) | `--devices host:port[,host:port,...]`  | `ZAPAROO_DEVICES`    |
-| API keys           | `--keys key1[,key2,...]`               | `ZAPAROO_KEYS`       |
-| Log level          | `--log-level debug\|info\|warn\|error` | `ZAPAROO_LOG_LEVEL`  |
+| Setting            | CLI Argument                          | Environment Variable |
+|--------------------|---------------------------------------|----------------------|
+| Devices (required) | `--devices host:port[,host:port,...]` | `ZAPAROO_DEVICES`    |
+| API keys           | `--keys key1[,key2,...]`              | `ZAPAROO_KEYS`       |
 
 The default port is 7497 if not specified.
 
