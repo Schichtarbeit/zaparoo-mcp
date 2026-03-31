@@ -7,9 +7,7 @@ import { toolRequest } from './helpers.js';
 const ACTION_MAP: Record<string, string> = {
   version: Methods.Version,
   health: Methods.Health,
-  refresh_launchers: Methods.LaunchersRefresh,
   check_update: Methods.UpdateCheck,
-  apply_update: Methods.UpdateApply,
 };
 
 export function registerAdminTool(server: McpServer, manager: DeviceManager): void {
@@ -17,18 +15,15 @@ export function registerAdminTool(server: McpServer, manager: DeviceManager): vo
     'zaparoo_admin',
     {
       title: 'Zaparoo Admin',
-      description: `Device administration commands.
+      annotations: { readOnlyHint: true },
+      description: `Query device administration info.
 
 Actions:
 - version: Get the Zaparoo Core version and platform
 - health: Health check (returns "ok" if running)
-- refresh_launchers: Refresh the launcher cache
-- check_update: Check if a software update is available
-- apply_update: Apply a pending software update`,
+- check_update: Check if a software update is available`,
       inputSchema: z.object({
-        action: z
-          .enum(['version', 'health', 'refresh_launchers', 'check_update', 'apply_update'])
-          .describe('Action to perform'),
+        action: z.enum(['version', 'health', 'check_update']).describe('Action to perform'),
         device: z
           .string()
           .optional()

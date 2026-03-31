@@ -142,6 +142,7 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       this.version = result.version;
       this.platform = result.platform;
       this.lastSeen = new Date();
+      this.lastError = undefined;
       this.setState(ConnectionState.Ready);
     } catch (err) {
       this.lastError = `Version check failed: ${err instanceof Error ? err.message : String(err)}`;

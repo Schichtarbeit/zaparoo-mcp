@@ -9,6 +9,7 @@ export function registerStopTool(server: McpServer, manager: DeviceManager): voi
     'zaparoo_stop',
     {
       title: 'Zaparoo Stop',
+      annotations: { readOnlyHint: false, idempotentHint: true },
       description: 'Stop the currently running media/game on a Zaparoo device.',
       inputSchema: z.object({
         device: z
@@ -18,7 +19,7 @@ export function registerStopTool(server: McpServer, manager: DeviceManager): voi
       }),
     },
     async ({ device }) => {
-      return toolRequest(manager, device, Methods.Stop);
+      return toolRequest(manager, device, Methods.Stop, undefined, 'Stopped media playback');
     },
   );
 }

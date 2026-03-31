@@ -5,7 +5,7 @@ import { registerDeviceStateResources } from './resources/device-state.js';
 import { registerZapScriptReference } from './resources/zapscript-ref.js';
 import { registerAllTools } from './tools/index.js';
 
-const SERVER_INSTRUCTIONS = `This server controls Zaparoo devices — NFC-based game launchers for retro gaming systems. Before writing or explaining ZapScript commands, read the zaparoo://reference/zapscript resource. Use zaparoo_run to execute ZapScript on a connected device. Use zaparoo_devices to check which devices are available and their connection state.`;
+const SERVER_INSTRUCTIONS = `This server controls Zaparoo devices — NFC-based game launchers for retro gaming systems. Before writing or explaining ZapScript commands, read the zaparoo://reference/zapscript resource. Use zaparoo_run to execute ZapScript on a connected device. Use zaparoo_devices to check which devices are available and their connection state. Use zaparoo_devices set_default to set a session default device.`;
 
 export function createServer(manager: DeviceManager): McpServer {
   const server = new McpServer(

@@ -9,6 +9,7 @@ export function registerSystemsTool(server: McpServer, manager: DeviceManager): 
     'zaparoo_systems',
     {
       title: 'Zaparoo Systems',
+      annotations: { readOnlyHint: true },
       description:
         'List all indexed media system categories (e.g., SNES, Genesis, N64) on a Zaparoo device.',
       inputSchema: z.object({

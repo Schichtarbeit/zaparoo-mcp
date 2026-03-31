@@ -10,6 +10,7 @@ export interface DeviceManagerEvents {
 
 export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
   private devices = new Map<string, DeviceConnection>();
+  private defaultDeviceId: string | null = null;
 
   constructor(configs: DeviceConfig[]) {
     super();
@@ -49,6 +50,12 @@ export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
       return device;
     }
 
+    // Try default device first
+    if (this.defaultDeviceId) {
+      const defaultDevice = this.devices.get(this.defaultDeviceId);
+      if (defaultDevice?.isReady) return defaultDevice;
+    }
+
     // Return first READY device
     for (const device of this.devices.values()) {
       if (device.isReady) return device;
@@ -58,6 +65,17 @@ export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
       .map((d) => `${d.config.id} (${d.info.state})`)
       .join(', ');
     throw new Error(`No devices are ready. Device states: ${states}`);
+  }
+
+  setDefaultDevice(id: string | null): void {
+    if (id !== null && !this.devices.has(id)) {
+      throw new Error(`Unknown device "${id}". Available: ${[...this.devices.keys()].join(', ')}`);
+    }
+    this.defaultDeviceId = id;
+  }
+
+  getDefaultDeviceId(): string | null {
+    return this.defaultDeviceId;
   }
 
   getDeviceInfo(id: string): DeviceInfo | undefined {

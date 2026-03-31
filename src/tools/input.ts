@@ -9,6 +9,7 @@ export function registerInputTool(server: McpServer, manager: DeviceManager): vo
     'zaparoo_input',
     {
       title: 'Zaparoo Input',
+      annotations: { readOnlyHint: false, openWorldHint: true },
       description: `Send simulated input to a Zaparoo device. The keys and buttons parameters use the same macro syntax as ZapScript input commands — consult the zaparoo://reference/zapscript resource for the full syntax.
 
 Actions:
@@ -48,7 +49,13 @@ Actions:
               isError: true,
             };
           }
-          return toolRequest(manager, device, Methods.InputKeyboard, { keys });
+          return toolRequest(
+            manager,
+            device,
+            Methods.InputKeyboard,
+            { keys },
+            'Keyboard input sent',
+          );
         case 'gamepad':
           if (!buttons) {
             return {
@@ -61,7 +68,13 @@ Actions:
               isError: true,
             };
           }
-          return toolRequest(manager, device, Methods.InputGamepad, { buttons });
+          return toolRequest(
+            manager,
+            device,
+            Methods.InputGamepad,
+            { buttons },
+            'Gamepad input sent',
+          );
         default:
           return {
             content: [{ type: 'text' as const, text: `Unknown action: ${action}` }],

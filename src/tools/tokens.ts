@@ -9,6 +9,7 @@ export function registerTokensTool(server: McpServer, manager: DeviceManager): v
     'zaparoo_tokens',
     {
       title: 'Zaparoo Tokens',
+      annotations: { readOnlyHint: true },
       description:
         'Query NFC tokens on a Zaparoo device. Use "list" to see currently active tokens, or "history" to see recent token scan history.',
       inputSchema: z.object({

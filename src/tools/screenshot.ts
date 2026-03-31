@@ -9,6 +9,7 @@ export function registerScreenshotTool(server: McpServer, manager: DeviceManager
     'zaparoo_screenshot',
     {
       title: 'Zaparoo Screenshot',
+      annotations: { readOnlyHint: true },
       description:
         'Capture a screenshot from a Zaparoo device. Returns the image as base64-encoded data.',
       inputSchema: z.object({

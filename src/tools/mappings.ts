@@ -9,6 +9,7 @@ export function registerMappingsTool(server: McpServer, manager: DeviceManager):
     'zaparoo_mappings',
     {
       title: 'Zaparoo Mappings',
+      annotations: { readOnlyHint: false, destructiveHint: true },
       description: `Manage token-to-action mappings on a Zaparoo device. Mappings define what happens when a specific NFC token is scanned.
 
 Actions:
@@ -45,14 +46,20 @@ Actions:
           return toolRequest(manager, device, Methods.Mappings);
 
         case 'create':
-          return toolRequest(manager, device, Methods.MappingsNew, {
-            label: args.label,
-            type: args.type,
-            match: args.match,
-            pattern: args.pattern,
-            override: args.override,
-            enabled: args.enabled ?? true,
-          });
+          return toolRequest(
+            manager,
+            device,
+            Methods.MappingsNew,
+            {
+              label: args.label,
+              type: args.type,
+              match: args.match,
+              pattern: args.pattern,
+              override: args.override,
+              enabled: args.enabled ?? true,
+            },
+            'Mapping created',
+          );
 
         case 'update': {
           if (!args.id) {
@@ -70,7 +77,7 @@ Actions:
           for (const key of ['label', 'type', 'match', 'pattern', 'override', 'enabled'] as const) {
             if (args[key] !== undefined) params[key] = args[key];
           }
-          return toolRequest(manager, device, Methods.MappingsUpdate, params);
+          return toolRequest(manager, device, Methods.MappingsUpdate, params, 'Mapping updated');
         }
 
         case 'delete':
@@ -85,10 +92,22 @@ Actions:
               isError: true,
             };
           }
-          return toolRequest(manager, device, Methods.MappingsDelete, { id: args.id });
+          return toolRequest(
+            manager,
+            device,
+            Methods.MappingsDelete,
+            { id: args.id },
+            'Mapping deleted',
+          );
 
         case 'reload':
-          return toolRequest(manager, device, Methods.MappingsReload);
+          return toolRequest(
+            manager,
+            device,
+            Methods.MappingsReload,
+            undefined,
+            'Mappings reloaded from disk',
+          );
 
         default:
           return {

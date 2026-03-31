@@ -9,6 +9,7 @@ export function registerInboxTool(server: McpServer, manager: DeviceManager): vo
     'zaparoo_inbox',
     {
       title: 'Zaparoo Inbox',
+      annotations: { readOnlyHint: false, destructiveHint: true },
       description: `Manage device inbox messages.
 
 Actions:
@@ -40,9 +41,9 @@ Actions:
               isError: true,
             };
           }
-          return toolRequest(manager, device, Methods.InboxDelete, { id });
+          return toolRequest(manager, device, Methods.InboxDelete, { id }, 'Inbox message deleted');
         case 'clear':
-          return toolRequest(manager, device, Methods.InboxClear);
+          return toolRequest(manager, device, Methods.InboxClear, undefined, 'Inbox cleared');
         default:
           return {
             content: [{ type: 'text' as const, text: `Unknown action: ${action}` }],
