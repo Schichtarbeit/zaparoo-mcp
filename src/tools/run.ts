@@ -11,9 +11,14 @@ export function registerRunTool(server: McpServer, manager: DeviceManager): void
       title: 'Zaparoo Run',
       annotations: { readOnlyHint: false, openWorldHint: true },
       description:
-        'Execute ZapScript on a Zaparoo device. Consult the zaparoo://reference/zapscript resource for syntax before writing ZapScript.',
+        'Execute ZapScript on a Zaparoo device. ZapScript can launch games by path or title, send keyboard/gamepad input, control playlists, make HTTP requests, and chain multiple commands. Use zaparoo_media search to find the correct game path before launching. Consult the zaparoo://reference/zapscript resource for full syntax before composing commands.',
       inputSchema: z.object({
-        zapscript: z.string().min(1).describe('ZapScript command to execute'),
+        zapscript: z
+          .string()
+          .min(1)
+          .describe(
+            'ZapScript command to execute (e.g. "SNES/Super Metroid.sfc", "**launch.random:snes", "**stop")',
+          ),
         device: z
           .string()
           .optional()

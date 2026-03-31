@@ -10,7 +10,8 @@ export function registerStopTool(server: McpServer, manager: DeviceManager): voi
     {
       title: 'Zaparoo Stop',
       annotations: { readOnlyHint: false, idempotentHint: true },
-      description: 'Stop the currently running media/game on a Zaparoo device.',
+      description:
+        'Stop the currently running media on a Zaparoo device and return to the system menu. This is a full stop — use zaparoo_media_control for in-game actions like pause/resume without exiting.',
       inputSchema: z.object({
         device: z
           .string()

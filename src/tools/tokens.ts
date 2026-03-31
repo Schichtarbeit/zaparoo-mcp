@@ -11,7 +11,7 @@ export function registerTokensTool(server: McpServer, manager: DeviceManager): v
       title: 'Zaparoo Tokens',
       annotations: { readOnlyHint: true },
       description:
-        'Query NFC tokens on a Zaparoo device. Use "list" to see currently active tokens, or "history" to see recent token scan history.',
+        'Query NFC tokens on a Zaparoo device. Use "list" to see tokens currently on a reader, or "history" to see a log of past token scans with timestamps and the text/UID that was read.',
       inputSchema: z.object({
         action: z.enum(['list', 'history']).describe('Action to perform'),
         device: z

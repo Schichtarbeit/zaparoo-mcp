@@ -10,7 +10,8 @@ export function registerReadersTool(server: McpServer, manager: DeviceManager): 
     {
       title: 'Zaparoo Readers',
       annotations: { readOnlyHint: true },
-      description: 'List NFC readers connected to a Zaparoo device and their capabilities.',
+      description:
+        "List NFC readers connected to a Zaparoo device. Returns each reader's driver, device path, and connection status. Use this to check reader availability before writing NFC tags with zaparoo_readers_write.",
       inputSchema: z.object({
         device: z
           .string()

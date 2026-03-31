@@ -11,7 +11,7 @@ export function registerSystemsTool(server: McpServer, manager: DeviceManager): 
       title: 'Zaparoo Systems',
       annotations: { readOnlyHint: true },
       description:
-        'List all indexed media system categories (e.g., SNES, Genesis, N64) on a Zaparoo device.',
+        'List all game systems available on a Zaparoo device (e.g. "snes", "genesis", "n64"). System IDs returned here can be used to filter searches in zaparoo_media and target random launches in zaparoo_run.',
       inputSchema: z.object({
         device: z
           .string()

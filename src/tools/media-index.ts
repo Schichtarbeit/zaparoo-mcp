@@ -10,7 +10,7 @@ export function registerMediaIndexTool(server: McpServer, manager: DeviceManager
     {
       title: 'Zaparoo Media Index',
       annotations: { readOnlyHint: false, destructiveHint: false },
-      description: `Manage the Zaparoo media database index. Generating can take a long time depending on the size of the media library.
+      description: `Manage the Zaparoo media database index. Run generate after adding new games to make them searchable. Indexing can take a long time depending on library size.
 
 Actions:
 - generate: Start media database indexing (systems optional)
@@ -21,7 +21,12 @@ Actions:
           .string()
           .optional()
           .describe('Device ID (host:port). Defaults to first available device.'),
-        systems: z.array(z.string()).optional().describe('Filter by system IDs (generate action)'),
+        systems: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'System IDs to index, e.g. ["snes", "genesis"]. Omit to index all systems (generate action).',
+          ),
       }),
     },
     async (args) => {

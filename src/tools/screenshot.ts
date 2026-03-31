@@ -11,7 +11,7 @@ export function registerScreenshotTool(server: McpServer, manager: DeviceManager
       title: 'Zaparoo Screenshot',
       annotations: { readOnlyHint: true },
       description:
-        'Capture a screenshot from a Zaparoo device. Returns the image as base64-encoded data.',
+        'Capture a screenshot from a Zaparoo device. Returns the current display as a base64-encoded PNG image. Use this to verify what game is running, check the current screen state, or help identify an unknown game.',
       inputSchema: z.object({
         device: z
           .string()

@@ -10,11 +10,11 @@ export function registerAdminManageTool(server: McpServer, manager: DeviceManage
     {
       title: 'Zaparoo Admin Manage',
       annotations: { readOnlyHint: false, destructiveHint: true },
-      description: `Device administration actions.
+      description: `Perform device administration actions. Use zaparoo_admin to query info before taking action.
 
 Actions:
-- refresh_launchers: Refresh the launcher cache
-- apply_update: Apply a pending software update (restarts the device)`,
+- refresh_launchers: Refresh the launcher cache (use after adding or removing games)
+- apply_update: Apply a pending software update (restarts the device — check availability first with zaparoo_admin check_update)`,
       inputSchema: z.object({
         action: z.enum(['refresh_launchers', 'apply_update']).describe('Action to perform'),
         device: z

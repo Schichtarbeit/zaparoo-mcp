@@ -31,10 +31,23 @@ Actions:
         type: z
           .enum(['id', 'value', 'data', 'uid', 'text'])
           .optional()
-          .describe('Token field to match against'),
-        match: z.enum(['exact', 'partial', 'regex']).optional().describe('Match strategy'),
-        pattern: z.string().optional().describe('Pattern to match'),
-        override: z.string().optional().describe('ZapScript override when matched'),
+          .describe(
+            'Token field to match against: "uid" (hardware ID), "text" (written text), "data" (raw data)',
+          ),
+        match: z
+          .enum(['exact', 'partial', 'regex'])
+          .optional()
+          .describe(
+            'Match strategy: "exact" (full match), "partial" (substring), "regex" (regular expression)',
+          ),
+        pattern: z
+          .string()
+          .optional()
+          .describe('Value to match against the token field, e.g. a UID string or regex pattern'),
+        override: z
+          .string()
+          .optional()
+          .describe('ZapScript command to execute when matched, e.g. "SNES/Game.sfc"'),
         enabled: z.boolean().optional().describe('Whether the mapping is active'),
       }),
     },

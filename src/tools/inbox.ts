@@ -10,7 +10,7 @@ export function registerInboxTool(server: McpServer, manager: DeviceManager): vo
     {
       title: 'Zaparoo Inbox',
       annotations: { readOnlyHint: false, destructiveHint: true },
-      description: `Manage device inbox messages.
+      description: `Manage device inbox messages. The inbox contains system notifications and alerts from the Zaparoo device.
 
 Actions:
 - list: List all inbox messages

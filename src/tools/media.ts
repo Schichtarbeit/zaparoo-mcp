@@ -53,24 +53,42 @@ Actions:
           .optional()
           .describe('Device ID (host:port). Defaults to first available device.'),
         // search params
-        query: z.string().optional().describe('Search query (search action)'),
-        systems: z.array(z.string()).optional().describe('Filter by system IDs'),
+        query: z
+          .string()
+          .optional()
+          .describe('Search query, e.g. "sonic", "mario kart" (search action)'),
+        systems: z
+          .array(z.string())
+          .optional()
+          .describe('Filter by system IDs, e.g. ["snes", "genesis"]'),
         maxResults: z.number().optional().describe('Max results to return'),
         cursor: z.string().optional().describe('Pagination cursor'),
         tags: z.array(z.string()).optional().describe('Filter by tags (search action)'),
         letter: z.string().optional().describe('Filter by starting letter'),
         // browse params
-        path: z.string().optional().describe('Browse path'),
+        path: z
+          .string()
+          .optional()
+          .describe('Browse path, e.g. "SNES/" or "Genesis/Sonic" (browse action)'),
         sort: z
           .enum(['name-asc', 'name-desc', 'filename-asc', 'filename-desc'])
           .optional()
           .describe('Sort order (browse action)'),
         // history params
         limit: z.number().optional().describe('Max entries (history/top actions)'),
-        since: z.string().optional().describe('Since date (top action)'),
+        since: z
+          .string()
+          .optional()
+          .describe('Since date in ISO 8601 format, e.g. "2025-01-01" (top action)'),
         // lookup params
-        name: z.string().optional().describe('Game name (lookup action, required)'),
-        system: z.string().optional().describe('System ID (lookup action, required)'),
+        name: z
+          .string()
+          .optional()
+          .describe('Game name to look up, e.g. "Super Metroid" (lookup action, required)'),
+        system: z
+          .string()
+          .optional()
+          .describe('System ID for lookup, e.g. "snes" (lookup action, required)'),
       }),
     },
     async (args) => {

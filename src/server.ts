@@ -14,7 +14,7 @@ Devices: Multiple Zaparoo devices may be connected, each identified by host:port
 
 ZapScript: Before writing or explaining ZapScript commands, read the zaparoo://reference/zapscript resource.
 
-Key tools: Use zaparoo_run to execute ZapScript. Use zaparoo_media search to find games. Use zaparoo_devices set_default to set a session default device.`;
+Workflows: To launch a game, search with zaparoo_media first, then execute with zaparoo_run. To pause/resume without exiting, use zaparoo_media_control — use zaparoo_stop only to fully exit. To write NFC tags, check readers with zaparoo_readers first, then write with zaparoo_readers_write.`;
 
 export function createServer(manager: DeviceManager, traceBuffer: TraceBuffer): McpServer {
   const server = new McpServer(

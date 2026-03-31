@@ -21,8 +21,18 @@ Actions:
           .string()
           .optional()
           .describe('Device ID (host:port). Defaults to first available device.'),
-        text: z.string().optional().describe('Text to write to NFC tag (write action)'),
-        readerId: z.string().optional().describe('Specific reader to use'),
+        text: z
+          .string()
+          .optional()
+          .describe(
+            'Text to write to the NFC tag — typically a ZapScript command like "SNES/Game.sfc" or "**launch.random:snes" (write action)',
+          ),
+        readerId: z
+          .string()
+          .optional()
+          .describe(
+            'Specific reader ID to use (from zaparoo_readers). Defaults to first available reader.',
+          ),
       }),
     },
     async ({ action, device, text, readerId }) => {

@@ -11,7 +11,7 @@ export function registerSettingsTool(server: McpServer, manager: DeviceManager):
       title: 'Zaparoo Settings',
       annotations: { readOnlyHint: true },
       description:
-        'Get all Zaparoo device settings including playtime limits. Use zaparoo_logs for device log access.',
+        'Get all Zaparoo device settings. Returns general configuration (scan mode, audio feedback, debug logging, reader connections) and playtime limit settings. Use zaparoo_settings_update to modify settings, or zaparoo_logs for device log access.',
       inputSchema: z.object({
         device: z
           .string()

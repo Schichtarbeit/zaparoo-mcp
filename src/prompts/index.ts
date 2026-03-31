@@ -10,25 +10,37 @@ export function registerAllPrompts(server: McpServer): void {
         'Write a ZapScript command to an NFC tag. Optionally search for a game first, or provide ZapScript text directly.',
       argsSchema: {
         game: z.string().optional().describe('Game name to search for'),
-        text: z.string().optional().describe('ZapScript text to write directly to the tag'),
+        zapscript: z.string().optional().describe('ZapScript command to write directly to the tag'),
       },
     },
-    ({ game, text }) => {
-      if (text) {
+    ({ game, zapscript }) => {
+      if (zapscript) {
         return {
           messages: [
             {
               role: 'user' as const,
               content: {
                 type: 'text' as const,
-                text: `I want to write the following ZapScript to an NFC tag: ${text}\n\nPlease use zaparoo_readers to check for connected readers, then use zaparoo_readers_write to write this text to a tag. Let me know when the tag is ready to be scanned.`,
+                text: `I want to write the following ZapScript to an NFC tag: ${zapscript}\n\nCheck for connected readers, then write this to a tag. Let me know when the tag is ready to be scanned.`,
               },
             },
           ],
         };
       }
 
-      const searchHint = game ? `Search for "${game}"` : 'Ask me what game or command I want';
+      if (game) {
+        return {
+          messages: [
+            {
+              role: 'user' as const,
+              content: {
+                type: 'text' as const,
+                text: `I want to write an NFC tag for my Zaparoo setup.\n\nSearch for "${game}", show me matching games with their systems, and let me pick one. Then compose the ZapScript launch command and write it to a tag. If I want something other than a game launch, help me compose the right ZapScript — read the zaparoo://reference/zapscript resource if needed.`,
+              },
+            },
+          ],
+        };
+      }
 
       return {
         messages: [
@@ -36,7 +48,7 @@ export function registerAllPrompts(server: McpServer): void {
             role: 'user' as const,
             content: {
               type: 'text' as const,
-              text: `I want to write an NFC tag for my Zaparoo setup.\n\n${searchHint}. Use zaparoo_media search to find matching games, show me the options with their system names, and let me pick one. Then compose the appropriate ZapScript launch command and use zaparoo_readers_write to write it to a tag.\n\nIf I want something other than a game launch (like a ZapScript command, playlist, or HTTP hook), help me compose the right ZapScript. Read the zaparoo://reference/zapscript resource if needed.`,
+              text: 'I want to write an NFC tag for my Zaparoo setup.\n\nAsk me what game or command I want on the tag. Help me find the right game and compose the ZapScript, then write it to a tag. If I want something other than a game launch, help me compose the right ZapScript — read the zaparoo://reference/zapscript resource if needed.',
             },
           },
         ],
@@ -60,13 +72,13 @@ export function registerAllPrompts(server: McpServer): void {
       if (game) parts.push(`Search for "${game}".`);
       if (system) parts.push(`Filter to the ${system} system.`);
 
-      parts.push(
-        '\nUse zaparoo_media search to find matching games. Show me the results and let me pick one. Once I choose, launch it using zaparoo_run with the appropriate ZapScript launch command.',
-      );
-
-      if (!game) {
+      if (game) {
         parts.push(
-          "\nIf I haven't specified a game, ask me what I'd like to play, or use zaparoo_media browse to show me what's available.",
+          '\nShow me matching games with their systems and let me pick one. Then launch it.',
+        );
+      } else {
+        parts.push(
+          "\nAsk me what I'd like to play, or show me what's available. When I pick something, launch it.",
         );
       }
 
@@ -110,7 +122,7 @@ export function registerAllPrompts(server: McpServer): void {
       }
 
       parts.push(
-        '\nUse zaparoo_mappings list to show existing mappings for context. Help me define the match criteria and the ZapScript command to run, then use zaparoo_mappings create to set it up. Read the zaparoo://reference/zapscript resource if I need help composing the action.',
+        '\nShow me existing mappings for context, then help me define the match criteria and ZapScript command. Read the zaparoo://reference/zapscript resource if I need help composing the action.',
       );
 
       return {
@@ -143,7 +155,7 @@ export function registerAllPrompts(server: McpServer): void {
             role: 'user' as const,
             content: {
               type: 'text' as const,
-              text: `Show me my Zaparoo play history and statistics.${systemFilter}\n\nUse zaparoo_media history to see recently played games, zaparoo_media top to see most-played games, and zaparoo_media playtime for overall playtime statistics. Summarize the data in a readable way — what I've been playing lately, my most-played games, and total time spent.`,
+              text: `Show me my Zaparoo play history and statistics.${systemFilter}\n\nSummarize what I've been playing recently, my most-played games, and total playtime. Present it in a readable format.`,
             },
           },
         ],
@@ -196,16 +208,9 @@ export function registerAllPrompts(server: McpServer): void {
       if (system) parts.push(`Focus on ${system} games.`);
       if (mood) parts.push(`I'm in the mood for: ${mood}.`);
 
-      parts.push(`
-Here's how to help me discover games:
-
-1. Use zaparoo_systems to see what systems are available, and zaparoo_media tags to see what game tags/genres exist.
-2. Use zaparoo_media search or zaparoo_media browse to explore the library. Use zaparoo_media top and zaparoo_media history to see what I've played before.
-3. Cross-reference the library against my play history to find games I haven't tried yet.
-4. Make recommendations based on what you find — suggest games I might enjoy, highlight anything interesting or unusual in the collection.
-5. If I want a random pick, you can use zaparoo_run with a **launch.random ZapScript command.
-
-Be creative and enthusiastic about the collection. Tell me interesting things about the games you find. When I pick something, launch it.`);
+      parts.push(
+        "\nExplore what systems and games I have. Cross-reference with my play history to find games I haven't tried yet. Make recommendations — suggest things I might enjoy, highlight anything interesting or unusual in the collection. If I want a random pick, launch something unexpected. Be creative and enthusiastic. When I pick something, launch it.",
+      );
 
       return {
         messages: [
@@ -242,7 +247,7 @@ Be creative and enthusiastic about the collection. Tell me interesting things ab
             role: 'user' as const,
             content: {
               type: 'text' as const,
-              text: `${goalText}\n\nRead the zaparoo://reference/zapscript resource to understand the full ZapScript language. Then help me compose the right command. Show me the ZapScript syntax and explain what each part does. If I want to test it, use zaparoo_run to execute it on a connected device.`,
+              text: `${goalText}\n\nRead the zaparoo://reference/zapscript resource for the full syntax, then help me compose the right command. Explain what each part does. If I want to test it, run it on a connected device.`,
             },
           },
         ],

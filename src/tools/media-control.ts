@@ -11,10 +11,17 @@ export function registerMediaControlTool(server: McpServer, manager: DeviceManag
       title: 'Zaparoo Media Control',
       annotations: { readOnlyHint: false, openWorldHint: true },
       description:
-        'Send a control action to the active launcher on a Zaparoo device (e.g. pause, resume).',
+        'Send a control command to the active launcher on a Zaparoo device without stopping it. Available actions depend on the launcher but commonly include: toggle_pause, save_state, fast_forward, rewind, next, previous. Use zaparoo_stop instead to fully exit the current media.',
       inputSchema: z.object({
-        controlAction: z.string().describe('Control action name'),
-        controlArgs: z.record(z.string()).optional().describe('Control action arguments'),
+        controlAction: z
+          .string()
+          .describe(
+            'Control action to send (e.g. "toggle_pause", "save_state", "fast_forward", "rewind", "next", "previous")',
+          ),
+        controlArgs: z
+          .record(z.string())
+          .optional()
+          .describe('Optional key-value arguments for the control action'),
         device: z
           .string()
           .optional()
