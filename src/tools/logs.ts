@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod/v3';
 import type { DeviceManager } from '../connection/manager.js';
+import type { TraceBuffer } from '../connection/trace.js';
 import type { LogDownloadResponse } from '../types.js';
 import { Methods } from '../types.js';
 
@@ -24,34 +25,46 @@ export function parseLogContent(base64Content: string): LogEntry[] {
     });
 }
 
-export function registerLogsTool(server: McpServer, manager: DeviceManager): void {
+export function registerLogsTool(
+  server: McpServer,
+  manager: DeviceManager,
+  traceBuffer: TraceBuffer,
+): void {
   server.registerTool(
     'zaparoo_logs',
     {
       title: 'Zaparoo Logs',
-      annotations: { readOnlyHint: true },
-      description: `Access device logs.
+      annotations: { readOnlyHint: false },
+      description: `Access device logs and API request tracing.
 
 Actions:
 - tail: Download and parse the device log file (JSONL format). First call returns the last N lines (default 50). Subsequent calls return only new lines since the last check.
 - full: Download and return the entire log file. Warning: can be very large.
-- reset: Forget the stored offset and start fresh on the next tail call.`,
+- reset: Forget the stored offset and start fresh on the next tail call.
+- trace: View recent API request/response trace entries. Must be enabled first with trace_set.
+- trace_set: Enable or disable request/response tracing. Pass enabled=true to start capturing, enabled=false to stop and clear. When enabled, all JSON-RPC requests and responses are captured with timing information.`,
       inputSchema: z.object({
-        action: z.enum(['tail', 'full', 'reset']).describe('Action to perform'),
+        action: z
+          .enum(['tail', 'full', 'reset', 'trace', 'trace_set'])
+          .describe('Action to perform'),
         count: z
           .number()
           .int()
           .min(1)
           .max(500)
           .optional()
-          .describe('Number of lines to return on first call (default 50)'),
+          .describe('Maximum number of entries to return (default 50)'),
+        enabled: z
+          .boolean()
+          .optional()
+          .describe('Set tracing enabled/disabled (used with trace_set action)'),
         device: z
           .string()
           .optional()
           .describe('Device ID (host:port). Defaults to first available device.'),
       }),
     },
-    async ({ action, count, device }) => {
+    async ({ action, count, enabled, device }) => {
       switch (action) {
         case 'tail': {
           try {
@@ -148,6 +161,54 @@ Actions:
               {
                 type: 'text' as const,
                 text: JSON.stringify({ success: true, message: 'Log offset reset' }),
+              },
+            ],
+          };
+        }
+
+        case 'trace': {
+          try {
+            const entries = traceBuffer.getRecent(
+              count ?? 50,
+              device ? manager.getDevice(device).config.id : undefined,
+            );
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: JSON.stringify(
+                    { enabled: traceBuffer.enabled, entries, count: entries.length },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          } catch (err) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: `Error: ${err instanceof Error ? err.message : String(err)}`,
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+
+        case 'trace_set': {
+          traceBuffer.enabled = enabled ?? !traceBuffer.enabled;
+          if (!traceBuffer.enabled) traceBuffer.clear();
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify({
+                  success: true,
+                  enabled: traceBuffer.enabled,
+                  message: `Tracing ${traceBuffer.enabled ? 'enabled' : 'disabled'}`,
+                }),
               },
             ],
           };

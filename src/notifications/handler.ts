@@ -44,7 +44,13 @@ export class NotificationHandler {
   }
 
   private onStateChange(state: ConnectionState, device: DeviceInfo): void {
-    this.stateStore.updateConnection(device.id, state, device.version, device.platform);
+    this.stateStore.updateConnection(
+      device.id,
+      state,
+      device.version,
+      device.platform,
+      device.lastError,
+    );
     this.sendResourceUpdate(device.id);
     this.sendResourceUpdate('devices');
   }

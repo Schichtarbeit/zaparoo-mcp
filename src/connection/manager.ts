@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { DeviceConfig } from '../config.js';
 import { DeviceConnection } from './device.js';
+import type { TraceBuffer } from './trace.js';
 import type { ConnectionState, DeviceInfo } from './types.js';
 
 export interface DeviceManagerEvents {
@@ -11,17 +12,13 @@ export interface DeviceManagerEvents {
 export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
   private devices = new Map<string, DeviceConnection>();
   private defaultDeviceId: string | null = null;
+  private traceBuffer: TraceBuffer | null = null;
 
-  constructor(configs: DeviceConfig[]) {
+  constructor(configs: DeviceConfig[], traceBuffer?: TraceBuffer) {
     super();
+    this.traceBuffer = traceBuffer ?? null;
     for (const config of configs) {
-      const device = new DeviceConnection(config);
-      device.on('stateChange', (state, info) => {
-        this.emit('stateChange', state, info);
-      });
-      device.on('notification', (method, params, deviceId) => {
-        this.emit('notification', method, params, deviceId);
-      });
+      const device = this.createDevice(config);
       this.devices.set(config.id, device);
     }
   }
@@ -89,15 +86,20 @@ export class DeviceManager extends EventEmitter<DeviceManagerEvents> {
   addDevice(config: DeviceConfig): void {
     if (this.devices.has(config.id)) return;
 
-    const device = new DeviceConnection(config);
+    const device = this.createDevice(config);
+    this.devices.set(config.id, device);
+    device.connect();
+  }
+
+  private createDevice(config: DeviceConfig): DeviceConnection {
+    const device = new DeviceConnection(config, this.traceBuffer ?? undefined);
     device.on('stateChange', (state, info) => {
       this.emit('stateChange', state, info);
     });
     device.on('notification', (method, params, deviceId) => {
       this.emit('notification', method, params, deviceId);
     });
-    this.devices.set(config.id, device);
-    device.connect();
+    return device;
   }
 
   removeDevice(id: string): void {

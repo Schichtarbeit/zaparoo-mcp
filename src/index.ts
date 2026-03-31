@@ -1,14 +1,16 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './config.js';
 import { DeviceManager } from './connection/manager.js';
+import { TraceBuffer } from './connection/trace.js';
 import { MdnsDiscovery } from './discovery/mdns.js';
 import { createServer } from './server.js';
 
 async function main(): Promise<void> {
   const config = loadConfig();
 
-  const manager = new DeviceManager(config.devices);
-  const server = createServer(manager);
+  const traceBuffer = new TraceBuffer();
+  const manager = new DeviceManager(config.devices, traceBuffer);
+  const server = createServer(manager, traceBuffer);
 
   let discovery: MdnsDiscovery | null = null;
 

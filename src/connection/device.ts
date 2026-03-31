@@ -3,6 +3,7 @@ import WebSocket from 'ws';
 import type { DeviceConfig } from '../config.js';
 import type { JsonRpcResponse, VersionResponse } from '../types.js';
 import { Methods } from '../types.js';
+import type { TraceBuffer } from './trace.js';
 import type { DeviceInfo } from './types.js';
 import { ConnectionState } from './types.js';
 
@@ -38,10 +39,13 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
   private lastSeen?: Date;
   private lastError?: string;
   private destroyed = false;
+  private traceBuffer: TraceBuffer | null = null;
+  private requestTimestamps = new Map<string, { time: number; method: string }>();
 
-  constructor(config: DeviceConfig) {
+  constructor(config: DeviceConfig, traceBuffer?: TraceBuffer) {
     super();
     this.config = config;
+    this.traceBuffer = traceBuffer ?? null;
   }
 
   get info(): DeviceInfo {
@@ -92,9 +96,12 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       params: params ?? null,
     });
 
+    this.traceRequest(id, method, params);
+
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingRequests.delete(id);
+        this.requestTimestamps.delete(id);
         reject(new Error(`Request to ${this.config.id} timed out after ${REQUEST_TIMEOUT_MS}ms`));
       }, REQUEST_TIMEOUT_MS);
 
@@ -107,6 +114,7 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       ws.send(message, (err) => {
         if (err) {
           this.pendingRequests.delete(id);
+          this.requestTimestamps.delete(id);
           clearTimeout(timer);
           reject(err);
         }
@@ -166,6 +174,7 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       if (pending) {
         this.pendingRequests.delete(id);
         clearTimeout(pending.timer);
+        this.traceResponse(id, msg.error ? { error: msg.error } : msg.result);
         if (msg.error) {
           pending.reject(new Error(msg.error.message));
         } else {
@@ -210,9 +219,12 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       params: params ?? null,
     });
 
+    this.traceRequest(id, method, params);
+
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingRequests.delete(id);
+        this.requestTimestamps.delete(id);
         reject(new Error('Internal request timed out'));
       }, REQUEST_TIMEOUT_MS);
 
@@ -225,10 +237,39 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       ws.send(message, (err) => {
         if (err) {
           this.pendingRequests.delete(id);
+          this.requestTimestamps.delete(id);
           clearTimeout(timer);
           reject(err);
         }
       });
+    });
+  }
+
+  private traceRequest(id: string, method: string, params: unknown): void {
+    if (!this.traceBuffer) return;
+    this.requestTimestamps.set(id, { time: Date.now(), method });
+    this.traceBuffer.push({
+      timestamp: new Date().toISOString(),
+      deviceId: this.config.id,
+      direction: 'request',
+      method,
+      id,
+      data: params ?? null,
+    });
+  }
+
+  private traceResponse(id: string, data: unknown): void {
+    if (!this.traceBuffer) return;
+    const request = this.requestTimestamps.get(id);
+    this.requestTimestamps.delete(id);
+    this.traceBuffer.push({
+      timestamp: new Date().toISOString(),
+      deviceId: this.config.id,
+      direction: 'response',
+      method: request?.method ?? '',
+      id,
+      data,
+      durationMs: request ? Date.now() - request.time : undefined,
     });
   }
 
@@ -267,6 +308,7 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       pending.reject(new Error('Connection closed'));
       this.pendingRequests.delete(id);
     }
+    this.requestTimestamps.clear();
 
     if (this.ws) {
       this.ws.removeAllListeners();

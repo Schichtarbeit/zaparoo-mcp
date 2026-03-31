@@ -7,6 +7,14 @@ import type {
 } from '../types.js';
 import { Notifications } from '../types.js';
 
+export interface ConnectionHistoryEntry {
+  state: string;
+  timestamp: string;
+  error?: string;
+}
+
+const MAX_CONNECTION_HISTORY = 50;
+
 export interface DeviceState {
   connectionState: string;
   version?: string;
@@ -18,6 +26,7 @@ export interface DeviceState {
     method: string;
     timestamp: string;
   };
+  connectionHistory: ConnectionHistoryEntry[];
 }
 
 export class DeviceStateStore {
@@ -26,7 +35,12 @@ export class DeviceStateStore {
   getState(deviceId: string): DeviceState {
     let state = this.states.get(deviceId);
     if (!state) {
-      state = { connectionState: 'DISCONNECTED', readers: [], activeMedia: [] };
+      state = {
+        connectionState: 'DISCONNECTED',
+        readers: [],
+        activeMedia: [],
+        connectionHistory: [],
+      };
       this.states.set(deviceId, state);
     }
     return state;
@@ -37,11 +51,22 @@ export class DeviceStateStore {
     connectionState: string,
     version?: string,
     platform?: string,
+    lastError?: string,
   ): void {
     const state = this.getState(deviceId);
     state.connectionState = connectionState;
     if (version !== undefined) state.version = version;
     if (platform !== undefined) state.platform = platform;
+
+    const entry: ConnectionHistoryEntry = {
+      state: connectionState,
+      timestamp: new Date().toISOString(),
+    };
+    if (lastError) entry.error = lastError;
+    state.connectionHistory.push(entry);
+    if (state.connectionHistory.length > MAX_CONNECTION_HISTORY) {
+      state.connectionHistory.shift();
+    }
   }
 
   handleNotification(deviceId: string, method: string, params: unknown): void {

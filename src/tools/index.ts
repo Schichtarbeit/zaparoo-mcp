@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { DeviceManager } from '../connection/manager.js';
+import type { TraceBuffer } from '../connection/trace.js';
 import type { NotificationBuffer } from '../notifications/buffer.js';
 import { registerAdminTool } from './admin.js';
 import { registerAdminManageTool } from './admin-manage.js';
@@ -26,6 +27,7 @@ export function registerAllTools(
   server: McpServer,
   manager: DeviceManager,
   notificationBuffer: NotificationBuffer,
+  traceBuffer: TraceBuffer,
 ): void {
   registerDevicesTool(server, manager);
   registerRunTool(server, manager);
@@ -46,5 +48,5 @@ export function registerAllTools(
   registerInputTool(server, manager);
   registerInboxTool(server, manager);
   registerNotificationsTool(server, notificationBuffer);
-  registerLogsTool(server, manager);
+  registerLogsTool(server, manager, traceBuffer);
 }

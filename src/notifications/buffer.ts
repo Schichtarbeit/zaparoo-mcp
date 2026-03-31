@@ -26,7 +26,7 @@ export class NotificationBuffer extends EventEmitter<NotificationBufferEvents> {
   push(entry: BufferedNotification): void {
     this.entries.push(entry);
     if (this.entries.length > this.maxSize) {
-      this.entries.splice(0, this.entries.length - this.maxSize);
+      this.entries.shift();
     }
     this.emit('notification', entry);
   }

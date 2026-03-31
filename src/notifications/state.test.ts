@@ -11,6 +11,7 @@ describe('DeviceStateStore', () => {
       expect(state.connectionState).toBe('DISCONNECTED');
       expect(state.readers).toEqual([]);
       expect(state.activeMedia).toEqual([]);
+      expect(state.connectionHistory).toEqual([]);
       expect(state.lastTokenScan).toBeUndefined();
       expect(state.lastNotification).toBeUndefined();
       expect(state.version).toBeUndefined();
@@ -62,6 +63,38 @@ describe('DeviceStateStore', () => {
       expect(state.connectionState).toBe('DISCONNECTED');
       expect(state.version).toBe('2.10.0');
       expect(state.platform).toBe('mister');
+    });
+
+    it('appends to connectionHistory on each update', () => {
+      const store = new DeviceStateStore();
+      store.updateConnection('device1', 'CONNECTING');
+      store.updateConnection('device1', 'READY', '2.10.0', 'mister');
+
+      const history = store.getState('device1').connectionHistory;
+      expect(history).toHaveLength(2);
+      expect(history[0].state).toBe('CONNECTING');
+      expect(history[1].state).toBe('READY');
+    });
+
+    it('includes error in connectionHistory when provided', () => {
+      const store = new DeviceStateStore();
+      store.updateConnection('device1', 'DISCONNECTED', undefined, undefined, 'Connection refused');
+
+      const history = store.getState('device1').connectionHistory;
+      expect(history).toHaveLength(1);
+      expect(history[0].error).toBe('Connection refused');
+    });
+
+    it('trims connectionHistory at 50 entries', () => {
+      const store = new DeviceStateStore();
+      for (let i = 0; i < 55; i++) {
+        store.updateConnection('device1', `STATE_${i}`);
+      }
+
+      const history = store.getState('device1').connectionHistory;
+      expect(history).toHaveLength(50);
+      expect(history[0].state).toBe('STATE_5');
+      expect(history[49].state).toBe('STATE_54');
     });
   });
 
