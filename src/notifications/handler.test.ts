@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeviceManager, DeviceManagerEvents } from '../connection/manager.js';
 import { ConnectionState } from '../connection/types.js';
 import { Notifications } from '../types.js';
+import { NotificationBuffer } from './buffer.js';
 import { NotificationHandler } from './handler.js';
 
 function createMockServer() {
@@ -23,14 +24,17 @@ function createMockManager() {
 describe('NotificationHandler', () => {
   let server: ReturnType<typeof createMockServer>;
   let manager: ReturnType<typeof createMockManager>;
+  let buffer: NotificationBuffer;
   let handler: NotificationHandler;
 
   beforeEach(() => {
     server = createMockServer();
     manager = createMockManager();
+    buffer = new NotificationBuffer();
     handler = new NotificationHandler(
       server as unknown as Server,
       manager as unknown as DeviceManager,
+      buffer,
     );
   });
 
@@ -185,12 +189,32 @@ describe('NotificationHandler', () => {
       expect(server.sendLoggingMessage).not.toHaveBeenCalled();
     });
 
-    it('does not log for media.indexing', () => {
-      manager.emit('notification', Notifications.MediaIndexing, {}, 'device1');
+    it('logs media indexing with step display', () => {
+      manager.emit(
+        'notification',
+        Notifications.MediaIndexing,
+        {
+          indexing: true,
+          currentStepDisplay: 'Scanning files',
+          currentStep: 2,
+          totalSteps: 5,
+        },
+        'device1',
+      );
 
-      // MediaIndexing is in LOG_NOTIFICATIONS but has no formatLogMessage case,
-      // so formatLogMessage returns null and no log is sent
-      expect(server.sendLoggingMessage).not.toHaveBeenCalled();
+      expect(server.sendLoggingMessage).toHaveBeenCalledWith({
+        level: 'info',
+        data: '[device1] Media indexing: Scanning files (step 2/5)',
+      });
+    });
+
+    it('logs media indexing without step details', () => {
+      manager.emit('notification', Notifications.MediaIndexing, { indexing: true }, 'device1');
+
+      expect(server.sendLoggingMessage).toHaveBeenCalledWith({
+        level: 'info',
+        data: '[device1] Media indexing',
+      });
     });
   });
 
@@ -226,6 +250,25 @@ describe('NotificationHandler', () => {
       expect(server.sendResourceUpdated).toHaveBeenCalledWith({
         uri: 'zaparoo://device1/state',
       });
+    });
+
+    it('pushes notifications to the buffer', () => {
+      manager.emit(
+        'notification',
+        Notifications.TokensAdded,
+        {
+          uid: 'abc',
+          text: 'test',
+          data: '',
+        },
+        'device1',
+      );
+
+      const recent = buffer.getRecent();
+      expect(recent).toHaveLength(1);
+      expect(recent[0].method).toBe(Notifications.TokensAdded);
+      expect(recent[0].deviceId).toBe('device1');
+      expect(recent[0].message).toBe('[device1] Token scanned: test');
     });
 
     it('sends resource updates and updates state store on state change', () => {

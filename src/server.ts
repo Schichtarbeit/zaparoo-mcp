@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { DeviceManager } from './connection/manager.js';
+import { NotificationBuffer } from './notifications/buffer.js';
 import { NotificationHandler } from './notifications/handler.js';
 import { registerDeviceStateResources } from './resources/device-state.js';
 import { registerZapScriptReference } from './resources/zapscript-ref.js';
@@ -21,10 +22,11 @@ export function createServer(manager: DeviceManager): McpServer {
   );
 
   // Wire up notification pipeline
-  const notificationHandler = new NotificationHandler(server.server, manager);
+  const notificationBuffer = new NotificationBuffer();
+  const notificationHandler = new NotificationHandler(server.server, manager, notificationBuffer);
 
   // Register all tools
-  registerAllTools(server, manager);
+  registerAllTools(server, manager, notificationBuffer);
 
   // Register resources
   registerDeviceStateResources(server, manager, notificationHandler);

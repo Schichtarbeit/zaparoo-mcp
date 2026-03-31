@@ -1,8 +1,14 @@
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import type { DeviceManager } from '../connection/manager.js';
 import type { ConnectionState, DeviceInfo } from '../connection/types.js';
-import type { MediaStartedParams, MediaStoppedParams, TokenAddedParams } from '../types.js';
+import type {
+  IndexingStatusResponse,
+  MediaStartedParams,
+  MediaStoppedParams,
+  TokenAddedParams,
+} from '../types.js';
 import { Notifications } from '../types.js';
+import type { NotificationBuffer } from './buffer.js';
 import { DeviceStateStore } from './state.js';
 
 // Notifications that always produce a log message to the LLM
@@ -22,9 +28,11 @@ const LOG_NOTIFICATIONS = new Set([
 export class NotificationHandler {
   readonly stateStore = new DeviceStateStore();
   private mcpServer: Server;
+  private buffer: NotificationBuffer;
 
-  constructor(mcpServer: Server, manager: DeviceManager) {
+  constructor(mcpServer: Server, manager: DeviceManager, buffer: NotificationBuffer) {
     this.mcpServer = mcpServer;
+    this.buffer = buffer;
 
     manager.on('stateChange', (state, device) => {
       this.onStateChange(state, device);
@@ -45,12 +53,22 @@ export class NotificationHandler {
     this.stateStore.handleNotification(deviceId, method, params);
     this.sendResourceUpdate(deviceId);
 
-    if (LOG_NOTIFICATIONS.has(method as (typeof Notifications)[keyof typeof Notifications])) {
-      const message = this.formatLogMessage(deviceId, method, params);
-      if (message) {
-        this.sendLogMessage(message);
-      }
+    const message = this.formatLogMessage(deviceId, method, params);
+
+    if (
+      message &&
+      LOG_NOTIFICATIONS.has(method as (typeof Notifications)[keyof typeof Notifications])
+    ) {
+      this.sendLogMessage(message);
     }
+
+    this.buffer.push({
+      timestamp: new Date().toISOString(),
+      deviceId,
+      method,
+      params,
+      message,
+    });
   }
 
   private formatLogMessage(deviceId: string, method: string, params: unknown): string | null {
@@ -70,6 +88,14 @@ export class NotificationHandler {
       case Notifications.MediaStopped: {
         const p = params as MediaStoppedParams;
         return `${prefix} Media stopped: ${p.mediaName} (${p.elapsed}s)`;
+      }
+      case Notifications.MediaIndexing: {
+        const p = params as IndexingStatusResponse;
+        if (p.currentStepDisplay) {
+          const step = p.totalSteps ? ` (step ${p.currentStep}/${p.totalSteps})` : '';
+          return `${prefix} Media indexing: ${p.currentStepDisplay}${step}`;
+        }
+        return `${prefix} Media indexing`;
       }
       case Notifications.ReadersAdded:
         return `${prefix} Reader connected`;
