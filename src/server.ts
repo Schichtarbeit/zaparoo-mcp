@@ -8,7 +8,9 @@ import { registerDeviceStateResources } from './resources/device-state.js';
 import { registerZapScriptReference } from './resources/zapscript-ref.js';
 import { registerAllTools } from './tools/index.js';
 
-const SERVER_INSTRUCTIONS = `This server controls Zaparoo devices — NFC-based game launchers for retro gaming systems.
+declare const PACKAGE_VERSION: string;
+
+const SERVER_INSTRUCTIONS = `This server controls Zaparoo devices. Zaparoo is the open source universal loading system that lets users launch games and media instantly using physical objects like NFC cards.
 
 Devices: Multiple Zaparoo devices may be connected, each identified by host:port (e.g. "192.168.1.50:7497"). Each device has a platform (e.g. "mister", "windows", "batocera", "steamos", "linux", "mac"). Use zaparoo_devices list to see connected devices and match user references like "my MiSTer" or "the Steam Deck" to the correct device by platform. Pass the device parameter to target a specific device. If no device is specified, the default or first available device is used.
 
@@ -18,7 +20,7 @@ Workflows: To launch a game, search with zaparoo_media first, then execute with 
 
 export function createServer(manager: DeviceManager, traceBuffer: TraceBuffer): McpServer {
   const server = new McpServer(
-    { name: 'zaparoo-mcp', version: '0.1.0' },
+    { name: 'zaparoo-mcp', version: PACKAGE_VERSION },
     {
       capabilities: {
         tools: {},

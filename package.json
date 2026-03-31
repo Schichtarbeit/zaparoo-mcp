@@ -1,6 +1,6 @@
 {
   "name": "zaparoo-mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MCP server for Zaparoo Core devices",
   "type": "module",
   "bin": {
@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "prepare": "npm run build",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
@@ -18,6 +19,26 @@
   },
   "files": [
     "build"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZaparooProject/zaparoo-mcp.git"
+  },
+  "homepage": "https://github.com/ZaparooProject/zaparoo-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/ZaparooProject/zaparoo-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "zaparoo",
+    "nfc",
+    "retro-gaming",
+    "game-launcher"
   ],
   "license": "GPL-3.0-or-later",
   "dependencies": {
