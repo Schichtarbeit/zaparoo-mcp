@@ -73,3 +73,5 @@ Tests use Vitest and live alongside source files as `*.test.ts`. Test files are 
 - Error responses from tools MUST use the `{ isError: true }` pattern (see `src/tools/helpers.ts`)
 - Device IDs use `host:port` format
 - NEVER use CommonJS (`require`/`module.exports`) — this is an ESM-only project
+- PR descriptions MUST NOT include test plans — keep them to a summary only
+- NEVER amend commits — always create new commits
