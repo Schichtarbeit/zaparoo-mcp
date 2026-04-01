@@ -1,8 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod/v3';
 import type { DeviceManager } from '../connection/manager.js';
+import type { ScreenshotResponse } from '../types.js';
 import { Methods } from '../types.js';
-import { toolRequest } from './helpers.js';
 
 export function registerScreenshotTool(server: McpServer, manager: DeviceManager): void {
   server.registerTool(
@@ -19,8 +20,21 @@ export function registerScreenshotTool(server: McpServer, manager: DeviceManager
           .describe('Device ID (host:port). Defaults to first available device.'),
       }),
     },
-    async ({ device }) => {
-      return toolRequest(manager, device, Methods.Screenshot);
+    async ({ device }): Promise<CallToolResult> => {
+      try {
+        const dev = manager.getDevice(device);
+        const result = await dev.request<ScreenshotResponse>(Methods.Screenshot);
+        return {
+          content: [{ type: 'image', data: result.data, mimeType: 'image/png' }],
+        };
+      } catch (err) {
+        return {
+          content: [
+            { type: 'text', text: `Error: ${err instanceof Error ? err.message : String(err)}` },
+          ],
+          isError: true,
+        };
+      }
     },
   );
 }

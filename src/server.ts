@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { Config } from './config.js';
 import type { DeviceManager } from './connection/manager.js';
 import type { TraceBuffer } from './connection/trace.js';
 import { NotificationBuffer } from './notifications/buffer.js';
@@ -18,7 +19,11 @@ ZapScript: Before writing or explaining ZapScript commands, read the zaparoo://r
 
 Workflows: To launch a game, search with zaparoo_media first, then execute with zaparoo_run. To pause/resume without exiting, use zaparoo_media_control — use zaparoo_stop only to fully exit. To write NFC tags, check readers with zaparoo_readers first, then write with zaparoo_readers_write.`;
 
-export function createServer(manager: DeviceManager, traceBuffer: TraceBuffer): McpServer {
+export function createServer(
+  manager: DeviceManager,
+  traceBuffer: TraceBuffer,
+  config: Config,
+): McpServer {
   const server = new McpServer(
     { name: 'zaparoo-mcp', version: PACKAGE_VERSION },
     {
@@ -37,7 +42,7 @@ export function createServer(manager: DeviceManager, traceBuffer: TraceBuffer): 
   const notificationHandler = new NotificationHandler(server.server, manager, notificationBuffer);
 
   // Register all tools, prompts, and resources
-  registerAllTools(server, manager, notificationBuffer, traceBuffer);
+  registerAllTools(server, manager, notificationBuffer, traceBuffer, config);
   registerAllPrompts(server);
   registerDeviceStateResources(server, manager, notificationHandler);
   registerZapScriptReference(server);

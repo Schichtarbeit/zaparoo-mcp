@@ -12,6 +12,8 @@ export interface DeviceConfig {
 export interface Config {
   devices: DeviceConfig[];
   discovery: boolean;
+  allowedTools?: string[];
+  blockedTools?: string[];
 }
 
 function parseDeviceList(raw: string, keys: string): DeviceConfig[] {
@@ -52,6 +54,8 @@ export function loadConfig(): Config {
       devices: { type: 'string' },
       keys: { type: 'string' },
       'no-discovery': { type: 'boolean' },
+      'allowed-tools': { type: 'string' },
+      'blocked-tools': { type: 'string' },
     },
     strict: false,
   });
@@ -61,17 +65,43 @@ export function loadConfig(): Config {
   const noDiscovery =
     (values['no-discovery'] as boolean | undefined) ?? process.env.ZAPAROO_NO_DISCOVERY === '1';
 
+  const allowedToolsRaw =
+    (values['allowed-tools'] as string | undefined) ?? process.env.ZAPAROO_ALLOWED_TOOLS ?? '';
+  const blockedToolsRaw =
+    (values['blocked-tools'] as string | undefined) ?? process.env.ZAPAROO_BLOCKED_TOOLS ?? '';
+
+  const allowedTools = allowedToolsRaw
+    ? allowedToolsRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+  const blockedTools = blockedToolsRaw
+    ? blockedToolsRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+
+  if (allowedTools && blockedTools) {
+    throw new Error(
+      'Cannot use both allowed and blocked tools. Set only --allowed-tools/ZAPAROO_ALLOWED_TOOLS or --blocked-tools/ZAPAROO_BLOCKED_TOOLS, not both.',
+    );
+  }
+
   if (!devicesRaw) {
     if (noDiscovery) {
       throw new Error(
         'No devices configured. Use --devices <host:port,...> or set ZAPAROO_DEVICES env var.',
       );
     }
-    return { devices: [], discovery: true };
+    return { devices: [], discovery: true, allowedTools, blockedTools };
   }
 
   return {
     devices: parseDeviceList(devicesRaw, keysRaw),
     discovery: false,
+    allowedTools,
+    blockedTools,
   };
 }
