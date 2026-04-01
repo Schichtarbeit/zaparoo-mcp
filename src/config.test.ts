@@ -14,6 +14,8 @@ describe('loadConfig', () => {
     delete process.env.ZAPAROO_DEVICES;
     delete process.env.ZAPAROO_KEYS;
     delete process.env.ZAPAROO_NO_DISCOVERY;
+    delete process.env.ZAPAROO_ALLOWED_TOOLS;
+    delete process.env.ZAPAROO_BLOCKED_TOOLS;
     mockParseArgs.mockReturnValue({ values: {}, positionals: [], tokens: undefined });
   });
 
@@ -21,6 +23,8 @@ describe('loadConfig', () => {
     delete process.env.ZAPAROO_DEVICES;
     delete process.env.ZAPAROO_KEYS;
     delete process.env.ZAPAROO_NO_DISCOVERY;
+    delete process.env.ZAPAROO_ALLOWED_TOOLS;
+    delete process.env.ZAPAROO_BLOCKED_TOOLS;
   });
 
   it('enables discovery when no devices configured', () => {
@@ -141,6 +145,59 @@ describe('loadConfig', () => {
     // lastIndexOf(':') splits on the rightmost colon
     expect(config.devices[0].host).toBe('::1');
     expect(config.devices[0].port).toBe(7497);
+  });
+
+  describe('tool filtering config', () => {
+    it('parses ZAPAROO_ALLOWED_TOOLS env var', () => {
+      process.env.ZAPAROO_ALLOWED_TOOLS = 'zaparoo_run,zaparoo_stop';
+      const config = loadConfig();
+
+      expect(config.allowedTools).toEqual(['zaparoo_run', 'zaparoo_stop']);
+      expect(config.blockedTools).toBeUndefined();
+    });
+
+    it('parses ZAPAROO_BLOCKED_TOOLS env var', () => {
+      process.env.ZAPAROO_BLOCKED_TOOLS = 'zaparoo_admin,zaparoo_admin_manage';
+      const config = loadConfig();
+
+      expect(config.blockedTools).toEqual(['zaparoo_admin', 'zaparoo_admin_manage']);
+      expect(config.allowedTools).toBeUndefined();
+    });
+
+    it('CLI --allowed-tools overrides env var', () => {
+      process.env.ZAPAROO_ALLOWED_TOOLS = 'zaparoo_run';
+      mockParseArgs.mockReturnValue({
+        values: { 'allowed-tools': 'zaparoo_stop,zaparoo_media' },
+        positionals: [],
+        tokens: undefined,
+      });
+
+      const config = loadConfig();
+
+      expect(config.allowedTools).toEqual(['zaparoo_stop', 'zaparoo_media']);
+      expect(config.blockedTools).toBeUndefined();
+    });
+
+    it('trims whitespace and ignores empty segments', () => {
+      process.env.ZAPAROO_ALLOWED_TOOLS = ' zaparoo_run , zaparoo_stop ,,';
+      const config = loadConfig();
+
+      expect(config.allowedTools).toEqual(['zaparoo_run', 'zaparoo_stop']);
+    });
+
+    it('throws when both allowed and blocked tools are set', () => {
+      process.env.ZAPAROO_ALLOWED_TOOLS = 'zaparoo_run';
+      process.env.ZAPAROO_BLOCKED_TOOLS = 'zaparoo_admin';
+
+      expect(() => loadConfig()).toThrow('Cannot use both allowed and blocked tools');
+    });
+
+    it('returns undefined for both when not set', () => {
+      const config = loadConfig();
+
+      expect(config.allowedTools).toBeUndefined();
+      expect(config.blockedTools).toBeUndefined();
+    });
   });
 
   describe('CLI args precedence', () => {

@@ -10,7 +10,7 @@ async function main(): Promise<void> {
 
   const traceBuffer = new TraceBuffer();
   const manager = new DeviceManager(config.devices, traceBuffer);
-  const server = createServer(manager, traceBuffer);
+  const server = createServer(manager, traceBuffer, config);
 
   let discovery: MdnsDiscovery | null = null;
 

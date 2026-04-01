@@ -35,13 +35,13 @@ Each file registers one MCP tool via `registerXxxTool(server, manager)`. All too
 `NotificationHandler` listens for device events, updates `DeviceStateStore` (in-memory cache), and pushes MCP resource change notifications.
 
 ### Config (`src/config.ts`)
-CLI args take precedence over env vars. Optional: `--devices`/`ZAPAROO_DEVICES`, `--keys`/`ZAPAROO_KEYS`. Default port is 7497. When no devices are configured, mDNS discovery is enabled automatically. Use `--no-discovery` or `ZAPAROO_NO_DISCOVERY=1` to disable.
+CLI args take precedence over env vars. Optional: `--devices`/`ZAPAROO_DEVICES`, `--keys`/`ZAPAROO_KEYS`. Default port is 7497. When no devices are configured, mDNS discovery is enabled automatically. Use `--no-discovery` or `ZAPAROO_NO_DISCOVERY=1` to disable. Tool filtering: `--allowed-tools`/`ZAPAROO_ALLOWED_TOOLS` (comma-separated whitelist) or `--blocked-tools`/`ZAPAROO_BLOCKED_TOOLS` (comma-separated blacklist). Cannot use both simultaneously.
 
 ## Adding a new tool
 
 1. Create `src/tools/mytool.ts` with a `registerMyTool(server, manager)` function
 2. Define input schema with Zod, use `toolRequest()` from `src/tools/helpers.ts` to call the device
-3. Register it in `src/tools/index.ts` inside `registerAllTools()`
+3. Add an entry to the `registry` array in `src/tools/index.ts` inside `registerAllTools()`
 
 ## Testing
 
