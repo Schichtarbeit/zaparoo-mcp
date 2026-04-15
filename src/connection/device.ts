@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
 import type { DeviceConfig } from '../config.js';
 import type { JsonRpcResponse, VersionResponse } from '../types.js';
@@ -33,7 +34,6 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
-  private requestIdCounter = 0;
   private version?: string;
   private platform?: string;
   private lastSeen?: Date;
@@ -88,13 +88,8 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       throw new Error(`Device ${this.config.id} is not ready (state: ${this.state})`);
     }
 
-    const id = `${++this.requestIdCounter}`;
-    const message = JSON.stringify({
-      jsonrpc: '2.0',
-      id,
-      method,
-      params: params ?? null,
-    });
+    const id = randomUUID();
+    const message = JSON.stringify(this.buildRequest(method, id, params));
 
     this.traceRequest(id, method, params);
 
@@ -211,13 +206,8 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       return Promise.reject(new Error('WebSocket not open'));
     }
 
-    const id = `${++this.requestIdCounter}`;
-    const message = JSON.stringify({
-      jsonrpc: '2.0',
-      id,
-      method,
-      params: params ?? null,
-    });
+    const id = randomUUID();
+    const message = JSON.stringify(this.buildRequest(method, id, params));
 
     this.traceRequest(id, method, params);
 
@@ -256,6 +246,28 @@ export class DeviceConnection extends EventEmitter<DeviceConnectionEvents> {
       id,
       data: params ?? null,
     });
+  }
+
+  private buildRequest(method: string, id: string, params?: unknown): {
+    jsonrpc: '2.0';
+    id: string;
+    method: string;
+    params?: unknown;
+  } {
+    const request = {
+      jsonrpc: '2.0' as const,
+      id,
+      method,
+    };
+
+    if (params !== undefined) {
+      return {
+        ...request,
+        params,
+      };
+    }
+
+    return request;
   }
 
   private traceResponse(id: string, data: unknown): void {

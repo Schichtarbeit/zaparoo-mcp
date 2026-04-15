@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "zaparoo": {
+      "command": "npx",
+      "args": ["-y", "zaparoo-mcp"],
+      "env": {
+        "ZAPAROO_DEVICES": "192.168.178.44:7497"
+      }
+    }
+  }
+}

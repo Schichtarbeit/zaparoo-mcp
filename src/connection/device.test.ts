@@ -162,6 +162,7 @@ describe('DeviceConnection', () => {
       const sentMsg = JSON.parse(lastMockWs.send.mock.calls[0][0]);
       expect(sentMsg.method).toBe('version');
       expect(sentMsg.jsonrpc).toBe('2.0');
+      expect(sentMsg).not.toHaveProperty('params');
     });
 
     it('transitions to Ready after successful version response', async () => {
